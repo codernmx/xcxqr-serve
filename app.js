@@ -1,115 +1,46 @@
-const Koa = require('koa')
-const app = new Koa()
-const Router = require('koa-router')
-const router = new Router()
-const bodyParser = require('koa-bodyparser')
-const rp = require('request-promise')
-const fs = require('fs')
-const config = require('./config.js')
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
 
-app.use(bodyParser())
+var indexRouter = require('./routes/index');
+var bjcxRouter = require('./routes/bjcx');
+var adminRouter = require('./routes/admin');
 
-app.use(async (ctx, next) => {
-    try {
-        await next()
-    } catch (err) {
-        ctx.body = {
-            code: -1, data: ctx.data, msg: ctx.msg || err.message || '服务开小差了，请稍后再试', etime: Date.now(),
-        }
-    }
-})
+var app = express();
 
-app.use(async (ctx, next) => {
-    await next()
-    if (!ctx.mimeType) {
-        ctx.set('Content-Type', 'application/json')
-        ctx.body = {
-            code: ctx.code || 0, data: ctx.data, message: ctx.msg || 'success', etime: Date.now(),
-        }
-    } else {
-        ctx.set('content-type', ctx.mimeType)
-        ctx.body = ctx.data
-    }
-})
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
 
-router.get('/', async (ctx, next) => {
-    ctx.data = 'demo api'
-    await next()
-})
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 
-router.get('/uuid', async (ctx, next) => {
-    let uuid = ctx.query.uuid, token = JSON.parse(fs.readFileSync('mp_token_info.json', 'utf-8')).access_token || ''
+app.use('/api', indexRouter);
+app.use('/api/bjcx', bjcxRouter);
+app.use('/admin', adminRouter);
 
-    const options = {
-        method: 'POST', url: 'https://api.weixin.qq.com/tcb/databasequery?access_token=' + token, body: {
-            env: config.env, query: 'db.collection("uuids").where({uuid:"' + uuid + '"}).get()',
-        }, json: true, encoding: null,
-    }
-
-    let uuids = await rp(options)
-    console.log(uuids, 'uuids')
-    let data = uuids.data && uuids.data.length > 0 ? JSON.parse(uuids.data[0]) : {}
-    let nickname = data.userInfo ? data.userInfo.nickName || '' : ''
-    let avatar = data.userInfo ? data.userInfo.avatarUrl || '' : ''
-    let openid = data.openid ? data.openid : ''
-    ctx.data = {nickname: nickname, avatar: avatar, openid: openid}
-    await next()
-})
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+	next(createError(404));
+});
 
 
-// 获取小程序全局token
-router.get('/getToken', async (ctx, next) => {
-    let tokenFileName = 'mp_token_info.json'
-    let tokenInfo = fs.existsSync(tokenFileName) ? JSON.parse(fs.readFileSync(tokenFileName, 'utf-8')) : null
-    let expires_time = tokenInfo ? tokenInfo.expires_time : ''
-    let cache_access_token = tokenInfo && tokenInfo.access_token ? tokenInfo.access_token : ''
-    if (parseInt(Date.now() / 1000) > expires_time + 3600 || tokenInfo == null || cache_access_token == '') {
-        let tokenForUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' + config.appId + '&secret=' + config.appSecret
-        let tokenInfoNew = await rp({url: tokenForUrl})
-        tokenInfoNew = JSON.parse(tokenInfoNew)
-        cache_access_token = tokenInfoNew.access_token
-        expires_time = parseInt(Date.now() / 1000)
-        fs.writeFileSync(tokenFileName, JSON.stringify({
-            access_token: cache_access_token, expires_time: expires_time,
-        }))
-        ctx.data = {token: cache_access_token, expires_time: expires_time}
-    } else {
-        ctx.data = {
-            token: tokenInfo.access_token, expires_time: tokenInfo.expires_time,
-        }
-    }
-    await next()
-})
+// apidoc  api文档
+// app.use('./apidoc',express.static('./apidoc'));
+// error handler
+app.use(function (err, req, res, next) {
+	// set locals, only providing error in development
+	res.locals.message = err.message;
+	res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-// 生成小程序码
-router.get('/getCode', async (ctx, next) => {
-    let page = 'pages/help/index',
-        token = JSON.parse(fs.readFileSync('mp_token_info.json', 'utf-8')).access_token || ''
+	// render the error page
+	res.status(err.status || 500);
+	res.render('error');
+});
 
-    let useAuth = ctx.query.useAuth
-    // 获取随机uuid
-    let scene = 'uuid=' + (ctx.query.uuid || 9999) + '&auth=' + useAuth
-    // 获取小程序码配置
-    const codeOptions = {
-        method: 'POST', url: 'https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=' + token, body: {
-            width: 230, scene: scene
-            // ,env_version:'trial' //体验版本
-        }, json: true, encoding: null,
-    }
-
-    // 获取小程序码图片Buffer
-    let imgBuffer = await rp(codeOptions)
-    console.log( 'console.log(imgBuffer)')
-    ctx.mimeType = 'image/png'
-    ctx.data = imgBuffer
-    await next()
-})
-
-app.use(router.routes())
-app.use(router.allowedMethods())
-
-let server = app.listen(config.port, function () {
-    let host = server.address().address
-    let port = server.address().port
-    console.log('Serve is running at http://localhost:%s', port)
-})
+module.exports = app;

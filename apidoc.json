@@ -1,0 +1,11 @@
+{
+	"name": "项目接口文档",
+	"version": "1.0.0",
+	"description": "BaseUrl：http://localhost:3000/",
+	"title": "user-service API Doc",
+	"forceLanguage": "zh-cn",
+	"template": {
+		"withCompare": true,
+		"withGenerator": true
+	}
+}
