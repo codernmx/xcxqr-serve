@@ -16,7 +16,11 @@ function success (res, total = null) {
 }
 
 
-// 获取用户列表（分页）
+
+/**
+ * @api {get} /api/bjcx/user/list 通过用户编码查询用户信息
+ * 获取用户列表（分页）
+ */
 router.get('/user/list', function (req, response, next) {
 	const sql = 'select count(*) as total from USER where DELETE_TIME is null'
 	let pageNum = 1

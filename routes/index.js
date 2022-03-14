@@ -12,6 +12,8 @@ router.get('/', function (req, res, next) {
 });
 
 
+
+// 登录uuid
 router.get('/uuid', function (req, res, next) {
 	let uuid = req.query.uuid, token = JSON.parse(fs.readFileSync('mp_token_info.json', 'utf-8')).access_token || ''
 
