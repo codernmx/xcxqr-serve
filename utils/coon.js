@@ -9,13 +9,13 @@ connection.connect();
 
 
 //避免数据库超时断开
-function keepalive () {
+function keepAlive () {
 	connection.query('select 1', [], function (err, result) {
 		if (err) return console.log(err);
 		// Successul keepalive
 	});
 }
-setInterval(keepalive, 1000 * 60);
+setInterval(keepAlive, 1000 * 60);
 
 
 
