@@ -26,8 +26,8 @@ router.get('/', function (req, res, next) {
 
 //发送验证码邮件
 router.post('/send/email', function (req, response, next) {
-	let code = createCode()
-	const mail = req.body.username
+	let code = createCode() //随机生成验证码
+	const mail = req.body.username //请求携带的邮件
 	client.set(mail, code).then(res => {   //存入redis
 		//设置成功发送邮件
 		nodemailer(mail, code)
@@ -43,6 +43,8 @@ router.post('/code/login', function (req, response, next) {
 	client.get(username).then(res => {   //从redis查询数据
 		if (password == res) {
 			console.log('验证成功')
+			//do something
+			// ...
 			response.send(success({
 				name: username,
 				code: password
