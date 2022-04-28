@@ -6,6 +6,7 @@
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
+    "alipay-sdk": "^3.2.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
@@ -16,6 +17,7 @@
     "multer": "^1.4.4",
     "mysql": "^2.18.1",
     "nodemailer": "^6.7.3",
+    "qr-image": "^3.2.0",
     "redis": "^4.0.4",
     "request": "^2.88.2",
     "silly-datetime": "^0.1.2"
