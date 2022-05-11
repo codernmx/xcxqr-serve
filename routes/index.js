@@ -45,10 +45,15 @@ router.post('/code/login', function (req, response, next) {
 			console.log('验证成功')
 			//do something
 			// ...
-			response.send(success({
-				name: username,
-				code: password
-			}))
+			if(username == '2507128400@qq.com'){
+				response.send(success({
+					name: username,
+					code: password
+				}))
+			}else{
+				response.send(fail('非管理员账号，请等待后续开发~'))
+			}
+			
 		} else {
 			console.log('验证失败')
 			response.send(fail('验证失败'))

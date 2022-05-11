@@ -109,6 +109,28 @@ router.get('/log/list', function (req, response, next) {
 });
 
 
+/* 获取附件列表 */
+router.get('/file/list', function (req, response, next) {
+	const { NAME } = req.query
+	const sql = 'select count(*) as total from FILE where DELETE_TIME is null'
+	let pageNum = 1
+	if (req.query.pageNum) {
+		pageNum = req.query.pageNum * 10 - 10
+	}
+	execsql(sql).then((r1) => {
+		let total = r1[0].total  //获取到的分页总数
+		const sqlNew = `select * from FILE where DELETE_TIME is null AND OLD_NAME LIKE '%${NAME}%' LIMIT ${pageNum},10`
+		execsql(sqlNew).then((r2) => {
+			response.send(success(r2, total));
+		}).catch((err) => {
+			res.send(err)
+		})
+	}).catch((err) => {
+		res.send(err)
+	})
+});
+
+
 
 
 module.exports = router;
