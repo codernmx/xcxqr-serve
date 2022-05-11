@@ -48,15 +48,22 @@ createFolder(uploadFolder);
 var upload = multer({ storage });
 
 
-router.post('/file', upload.single('file'), function (req, res, next) {
+router.post('/file', upload.single('file'), function (req, response, next) {
 	const file = req.file;
+	const usePath = file.path.substring(7)
+	console.log(usePath,'usePath')
+	let sql = `INSERT INTO FILE (OLD_NAME,NAME,FOLDER,PATH) VALUES ('${file.originalname}','${file.filename}','${file.destination}','${time+'/'+file.filename}')`
+	/* 存数据库 */
+	execsql(sql).then(res => {
+		// 接收文件成功后返回数据给前端
+		response.send(success({ ...file, usePath }))
+	}).catch((err) => {
+		response.send(err)
+	})
 	console.log('文件类型：%s', file.mimetype);
 	console.log('原始文件名：%s', file.originalname);
 	console.log('文件大小：%s', file.size);
 	console.log('文件保存路径：%s', file.path);
-	const usePath = file.path.substring(7)
-	// 接收文件成功后返回数据给前端
-	res.send(success({ ...file,usePath }))
 });
 
 module.exports = router;

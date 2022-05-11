@@ -15,17 +15,6 @@ var uploadRouter = require('./routes/upload'); //上传附件
 var app = express();
 
 
-// 允许跨域访问  使用的是cors解决跨域问题，当我们再本地直接请求该接口的时候，可以直接请求
-app.all('*', function (req, res, next) {
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Headers", "X-Requested-With");
-	res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-	res.header("X-Powered-By", ' 3.2.1')
-	res.header("Content-Type", "application/json;charset=utf-8");
-	next();
-});
-
-
 
 
 
@@ -48,6 +37,20 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 // 开放upload
 app.use(express.static(path.join(__dirname, '/upload')));
+
+
+/* 这玩意不能放在开放静态资源之前 */
+// 允许跨域访问  使用的是cors解决跨域问题，当我们再本地直接请求该接口的时候，可以直接请求
+app.all('*', function (req, res, next) {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "X-Requested-With");
+	res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+	res.header("X-Powered-By", ' 3.2.1')
+	res.header("Content-Type", "application/json;charset=utf-8");
+	next();
+});
+
+
 
 app.use('/api/', indexRouter);
 app.use('/api/bjcx', bjcxRouter);
