@@ -33,7 +33,7 @@ router.post('/send/email', function (req, response, next) {
 		nodemailer(mail, code)
 		response.send(success())
 	})
-	client.expire(mail, 60);//设置过期时间 60s 前端六十秒可以重新获取
+	client.expire(mail, 60 * 1000);//设置过期时间 60s 前端六十秒可以重新获取
 });
 
 //登录
@@ -45,15 +45,25 @@ router.post('/code/login', function (req, response, next) {
 			console.log('验证成功')
 			//do something
 			// ...
-			if(username == '2507128400@qq.com'){
-				response.send(success({
-					name: username,
-					code: password
-				}))
-			}else{
-				response.send(fail('非管理员账号，请等待后续开发~'))
-			}
-			
+			let sql = `SELECT * FROM  USER WHERE EMAIL = '${username}'`
+			execsql(sql).then(res => {
+				console.log(res, 'res')
+				if (username == '2507128400@qq.com' && res[0]) {
+					response.send(success({
+						name: username,
+						code: password,
+						...res[0],
+						token: '2507128400@qq.com'
+					}))
+				} else {
+					response.send(fail('非管理员账号，请等待后续开发~'))
+				}
+			}).catch((err) => {
+
+			})
+
+
+
 		} else {
 			console.log('验证失败')
 			response.send(fail('验证失败'))
@@ -66,9 +76,18 @@ router.post('/code/login', function (req, response, next) {
 /* 获取角色信息 */
 router.get('/get/user/info', function (req, response, next) {
 	const { ID } = req.query
+	/* 获取角色 */
 	let sql = `SELECT * FROM ROLE JOIN USER_ROLE ON ROLE.ID = USER_ROLE.ROLE_ID WHERE USER_ROLE.USER_ID = ${ID}`
 	execsql(sql).then(res => {
-		response.send(success(res))
+		let sqlUser = `SELECT * FROM USER WHERE ID = ${ID}`
+		execsql(sqlUser).then(r => {
+			response.send(success({
+				roles: res,
+				...r[0]
+			}))
+		}).catch((errUser) => {
+			response.send(errUser)
+		})
 	}).catch((err) => {
 		response.send(err)
 	})
