@@ -51,8 +51,9 @@ var upload = multer({ storage });
 router.post('/file', upload.single('file'), function (req, response, next) {
 	const file = req.file;
 	const usePath = file.path.substring(7)
+	const suffix = file.originalname.substring(file.originalname.lastIndexOf("."))
 	console.log(usePath,'usePath')
-	let sql = `INSERT INTO FILE (OLD_NAME,NAME,SIZE,FOLDER,PATH) VALUES ('${file.originalname}','${file.filename}','${file.size}','${file.destination}','${time+'/'+file.filename}')`
+	let sql = `INSERT INTO FILE (OLD_NAME,NAME,SIZE,FOLDER,PATH,SUFFIX) VALUES ('${file.originalname}','${file.filename}','${file.size}','${file.destination}','${time+'/'+file.filename}','${suffix}')`
 	/* 存数据库 */
 	execsql(sql).then(res => {
 		// 接收文件成功后返回数据给前端

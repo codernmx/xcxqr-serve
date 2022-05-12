@@ -61,9 +61,6 @@ router.post('/code/login', function (req, response, next) {
 			}).catch((err) => {
 
 			})
-
-
-
 		} else {
 			console.log('验证失败')
 			response.send(fail('验证失败'))
@@ -93,7 +90,16 @@ router.get('/get/user/info', function (req, response, next) {
 	})
 });
 
-
+/* 获取配置信息 */
+router.get('/get/config', function (req, response, next) {
+	console.log(req.path)
+	let sql = 'SELECT * FROM CONFIG WHERE ID = 1'
+	execsql(sql).then(res => {
+		response.send(success(res[0]))
+	}).catch((err) => {
+		response.send(err)
+	})
+});
 
 
 
