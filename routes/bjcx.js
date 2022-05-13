@@ -11,7 +11,7 @@ const { createCode, success, fail } = require('../utils/index');//成功失败
  * 获取用户列表（分页）
  */
 router.get('/user/list', function (req, response, next) {
-	const { nickName } = req.query
+	const { NICK_NAME } = req.query
 	const sql = 'select count(*) as total from USER where DELETE_TIME is null'
 	let pageNum = 1
 	let pageSize = 10
@@ -23,7 +23,7 @@ router.get('/user/list', function (req, response, next) {
 	}
 	execsql(sql).then((r1) => {
 		let total = r1[0].total  //获取到的分页总数
-		const sqlNew = `select * from USER where DELETE_TIME is null AND nickName LIKE '%${nickName}%' ORDER BY CREATE_TIME DESC LIMIT ${pageNum},${pageSize}`
+		const sqlNew = `select * from USER where DELETE_TIME is null AND NICK_NAME LIKE '%${NICK_NAME}%' ORDER BY CREATE_TIME DESC LIMIT ${pageNum},${pageSize}`
 		execsql(sqlNew).then((r2) => {
 			response.send(success(r2, total));
 		}).catch((err) => {
@@ -49,8 +49,8 @@ router.get('/user/detail', function (req, response, next) {
 /* 新增用户 */
 router.post('/user/insert', function (req, response, next) {
 	console.log(req.body, 'req.body')
-	const { nickName } = req.body
-	const sql = `INSERT INTO USER (nickName) VALUES ('${nickName}')`
+	const { NICK_NAME } = req.body
+	const sql = `INSERT INTO USER (NICK_NAME) VALUES ('${NICK_NAME}')`
 	execsql(sql).then(res => {
 		response.send(success(res))
 	}).catch((err) => {
@@ -62,8 +62,8 @@ router.post('/user/insert', function (req, response, next) {
 /* 修改用户 */
 router.post('/user/update', function (req, response, next) {
 	console.log(req.body, 'req.body')
-	const { id, nickName } = req.body
-	let sql = `UPDATE USER SET nickName = '${nickName}' WHERE id = ${id}`
+	const { ID, NICK_NAME } = req.body
+	let sql = `UPDATE USER SET NICK_NAME = '${NICK_NAME}' WHERE ID = ${ID}`
 	execsql(sql).then(res => {
 		response.send(success(res))
 	}).catch((err) => {
@@ -75,8 +75,8 @@ router.post('/user/update', function (req, response, next) {
 /* 删除用户 */
 router.get('/user/delete', function (req, response, next) {
 	console.log(req.body, 'req.body')
-	const { id } = req.query
-	let sql = `DELETE FROM USER  WHERE id = ${id}`
+	const { ID } = req.query
+	let sql = `DELETE FROM USER  WHERE ID = ${ID}`
 	execsql(sql).then(res => {
 		response.send(success(res))
 	}).catch((err) => {

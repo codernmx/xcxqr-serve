@@ -125,7 +125,7 @@ router.get('/uuid', function (req, res, next) {
 			let uuids = body
 			console.log(uuids, 'uuids')
 			let data = uuids.data && uuids.data.length > 0 ? JSON.parse(uuids.data[0]) : {}
-			let nickname = data.userInfo ? data.userInfo.nickName || '' : ''
+			let NICK_NAME = data.userInfo ? data.userInfo.NICK_NAME || '' : ''
 			let avatar = data.userInfo ? data.userInfo.avatarUrl || '' : ''
 			let openid = data.openid ? data.openid : ''
 			res.send(
@@ -133,7 +133,7 @@ router.get('/uuid', function (req, res, next) {
 					code: 200,
 					msg: '成功',
 					data: {
-						nickname: nickname,
+						NICK_NAME: NICK_NAME,
 						avatar,
 						openid,
 						timestemp: new Date().getTime(),

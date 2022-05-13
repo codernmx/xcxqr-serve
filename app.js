@@ -36,7 +36,7 @@ app.use(cookieParser());
 // 开放public
 app.use(express.static(path.join(__dirname, 'public')));
 // 开放upload
-app.use('upload',express.static(path.join(__dirname, '/upload')));
+app.use('/upload',express.static(path.join(__dirname, '/upload')));
 
 
 /* 这玩意不能放在开放静态资源之前 */
