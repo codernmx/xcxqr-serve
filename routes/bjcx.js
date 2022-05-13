@@ -97,7 +97,7 @@ router.get('/log/list', function (req, response, next) {
 	}
 	execsql(sql).then((r1) => {
 		let total = r1[0].total  //获取到的分页总数
-		const sqlNew = `select * from LOG where DELETE_TIME is null LIMIT ${pageNum},10`
+		const sqlNew = `select * from LOG where DELETE_TIME is null ORDER BY CREATE_TIME DESC LIMIT ${pageNum},10`
 		execsql(sqlNew).then((r2) => {
 			response.send(success(r2, total));
 		}).catch((err) => {

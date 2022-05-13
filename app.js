@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var bodyParser = require('body-parser')//导入post请求的中间件
+var expressip = require('express-ip'); //查看IP
 
 
 var indexRouter = require('./routes/index');
@@ -17,8 +18,7 @@ var app = express();
 
 
 
-
-
+app.use(expressip().getIpInfoMiddleware);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');

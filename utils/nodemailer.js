@@ -16,8 +16,7 @@ let transporter = nodemailer.createTransport({
 //pass 不是邮箱账户的密码而是stmp的授权码（必须是相应邮箱的stmp授权码）
 //邮箱---设置--账户--POP3/SMTP服务---开启---获取stmp授权码
 
-module.exports = function (email, code) {
-	//     const {username,password,email} = user
+const sendCode = function (email, code) {
 	let mailOptions = {
 		from: '<nmxgzs@foxmail.com>', // 发送方
 		to: email, //接收者邮箱，多个邮箱用逗号间隔
@@ -31,4 +30,27 @@ module.exports = function (email, code) {
 		}
 		console.log('mail sent:', info.response);
 	});
-};
+}
+const sendEmail = (to,subject, text) => {
+	let mailOptions = {
+		from: '<nmxgzs@foxmail.com>', // 发送方
+		to, //接收者邮箱，多个邮箱用逗号间隔
+		subject, // 标题
+		text
+	};
+	transporter.sendMail(mailOptions, (error, info) => {
+		if (error) {
+			console.log(error)
+			return error
+		}
+		console.log('mail sent:', info.response);
+	});
+
+}
+
+
+
+module.exports = {
+	sendCode,
+	sendEmail
+}

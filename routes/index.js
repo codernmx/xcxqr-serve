@@ -7,11 +7,9 @@ const request = require('request');
 const { appConfig } = require('../config/index')
 
 const client = require('../utils/redis');//redis使用
-const nodemailer = require('../utils/nodemailer');//发送邮件
+const { sendCode, sendEmail } = require('../utils/nodemailer');//发送邮件
 const { execsql } = require('../utils/coon');//数据库操作方法
 const { createCode, success, fail } = require('../utils/index');//成功失败
-
-
 
 
 
@@ -25,15 +23,41 @@ router.get('/', function (req, res, next) {
 
 
 //发送验证码邮件
-router.post('/send/email', function (req, response, next) {
+router.post('/send/code', function (req, response, next) {
 	let code = createCode() //随机生成验证码
 	const mail = req.body.username //请求携带的邮件
 	client.set(mail, code).then(res => {   //存入redis
 		//设置成功发送邮件
-		nodemailer(mail, code)
+		sendCode(mail, code)
 		response.send(success())
 	})
 	client.expire(mail, 60 * 1000);//设置过期时间 60s 前端六十秒可以重新获取
+});
+/* 发送邮件 */
+router.post('/send/email', function (req, response, next) {
+	console.log(req.body, 'req.body')
+	const ip = req.ipInfo.ip.replace('::ffff:','')
+	console.log(req.ipInfo)
+	const { email, subject, content } = req.body
+	sendEmail(email, subject, content)  /* 发送邮件 */
+	request({
+		url: 'https://api.map.baidu.com/location/ip?ak=Z2mZbxYsOQllRq7MqFspSrYNqG9uPa20&ip=' + ip,
+		method: "GET",
+	}, function (error, res, body) {
+		if (!error && res.statusCode == 200) {
+			console.log(body,'百度地图置换ip',JSON.parse(body)) // 请求成功的处理逻辑
+			let address = JSON.parse(body).address
+			let sql = `INSERT INTO LOG (IP,ADDRESS,ACTION) VALUES ('${ip}','${address}','${'发送了邮件，内容为：' + content}')`
+			execsql(sql).then(r => {
+				response.send(success(r))
+			}).catch((err) => {
+				response.send(err)
+			})
+		} else {
+			response.send(fail(error))
+		}
+	})
+
 });
 
 //登录
@@ -125,7 +149,7 @@ router.get('/uuid', function (req, res, next) {
 			let uuids = body
 			console.log(uuids, 'uuids')
 			let data = uuids.data && uuids.data.length > 0 ? JSON.parse(uuids.data[0]) : {}
-			let NICK_NAME = data.userInfo ? data.userInfo.NICK_NAME || '' : ''
+			let nickname = data.userInfo ? data.userInfo.nickName || '' : ''
 			let avatar = data.userInfo ? data.userInfo.avatarUrl || '' : ''
 			let openid = data.openid ? data.openid : ''
 			res.send(
@@ -133,7 +157,7 @@ router.get('/uuid', function (req, res, next) {
 					code: 200,
 					msg: '成功',
 					data: {
-						NICK_NAME: NICK_NAME,
+						nickname: nickname,
 						avatar,
 						openid,
 						timestemp: new Date().getTime(),
