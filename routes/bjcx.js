@@ -12,8 +12,8 @@ const { createCode, success, fail } = require('../utils/index');//成功失败
  */
 router.get('/user/list', function (req, response, next) {
 	const { NICK_NAME } = req.query
-	const sql = 'select count(*) as total from USER where DELETE_TIME is null'
-	let pageNum = 1
+	const sql = `select count(*) as total from USER where DELETE_TIME is null AND NICK_NAME LIKE '%${NICK_NAME}%'`
+	let pageNum = 0
 	let pageSize = 10
 	if (req.query.pageSize) {
 		pageSize = req.query.pageSize
@@ -23,7 +23,7 @@ router.get('/user/list', function (req, response, next) {
 	}
 	execsql(sql).then((r1) => {
 		let total = r1[0].total  //获取到的分页总数
-		const sqlNew = `select * from USER where DELETE_TIME is null AND NICK_NAME LIKE '%${NICK_NAME}%' ORDER BY CREATE_TIME DESC LIMIT ${pageNum},${pageSize}`
+		const sqlNew = `SELECT * FROM USER WHERE DELETE_TIME IS NULL AND NICK_NAME LIKE '%${NICK_NAME}%' ORDER BY ID DESC LIMIT ${pageNum},${pageSize}`
 		execsql(sqlNew).then((r2) => {
 			response.send(success(r2, total));
 		}).catch((err) => {
@@ -91,7 +91,7 @@ router.get('/user/delete', function (req, response, next) {
 // 获取用户行为列表（ip表）（分页）
 router.get('/log/list', function (req, response, next) {
 	const sql = 'select count(*) as total from LOG where DELETE_TIME is null'
-	let pageNum = 1
+	let pageNum = 0
 	if (req.query.pageNum) {
 		pageNum = req.query.pageNum * 10 - 10
 	}
@@ -112,14 +112,15 @@ router.get('/log/list', function (req, response, next) {
 /* 获取附件列表 */
 router.get('/file/list', function (req, response, next) {
 	const { NAME } = req.query
-	const sql = 'select count(*) as total from FILE where DELETE_TIME is null'
-	let pageNum = 1
+	const sql = `select count(*) as total from FILE where DELETE_TIME is null AND OLD_NAME LIKE '%${NAME}%'`
+	let pageNum = 0
 	if (req.query.pageNum) {
 		pageNum = req.query.pageNum * 10 - 10
 	}
 	execsql(sql).then((r1) => {
 		let total = r1[0].total  //获取到的分页总数
 		const sqlNew = `select * from FILE where DELETE_TIME is null AND OLD_NAME LIKE '%${NAME}%' LIMIT ${pageNum},10`
+		console.log(sqlNew, 'sqlNew')
 		execsql(sqlNew).then((r2) => {
 			response.send(success(r2, total));
 		}).catch((err) => {
