@@ -4,11 +4,10 @@ var router = express.Router();
 
 var fs = require('fs'); //文件
 var multer = require('multer');   //上传文件中间件
-var md5 = require('md5');
 var moment = require('silly-datetime'); //格式化时间
 
 const { execsql } = require('../utils/coon');//数据库sql函数
-const { createCode, success, fail } = require('../utils/index');//成功失败
+const { createCode, success, fail, createFileName } = require('../utils/index');//成功失败
 
 
 // 创建文件夹  使用此代码就是为了让我们查找磁盘中是否有该文件夹，如果没有，可以自动创建，而不是我们提前手动创建好。如果不使用此代码，则我们再使用该文件夹之前，需要手动创建好当前文件夹
@@ -38,23 +37,24 @@ var storage = multer.diskStorage({
 		// 将保存文件名设置为 时间戳 + 文件原始名，比如 151342376785-123.jpg
 		// file.originalname   是文件名+后缀
 		// file.originalname.substring(file.originalname.lastIndexOf("."))  这里是拿到文件的后缀
-		cb(null, md5(Date.now() + file.originalname) + file.originalname.substring(file.originalname.lastIndexOf(".")));  //对当前时间戳 加文件名取MD5 加上后缀名
+		cb(null, createFileName(6) + file.originalname.substring(file.originalname.lastIndexOf(".")));  //对当前时间戳 加文件名取MD5 加上后缀名
+		// 之前文件名 md5(Date.now() + file.originalname)
 		// cb(null, Date.now() + "-" + file.originalname);
 	}
 });
 
-const time = moment.format(new Date(), 'YYYY-MM-DD')
+
 // 创建 multer 对象
 var upload = multer({ storage });
 
 
 router.post('/file', upload.single('file'), function (req, response, next) {
-	
+	const time = moment.format(new Date(), 'YYYY-MM-DD')
 	const file = req.file;
 	const usePath = file.path.substring(7)
 	const suffix = file.originalname.substring(file.originalname.lastIndexOf("."))
-	console.log(usePath,'usePath')
-	let sql = `INSERT INTO FILE (OLD_NAME,NAME,SIZE,FOLDER,PATH,SUFFIX) VALUES ('${file.originalname}','${file.filename}','${file.size}','${file.destination}','${time+'/'+file.filename}','${suffix}')`
+	console.log(usePath, 'usePath')
+	let sql = `INSERT INTO FILE (OLD_NAME,NAME,SIZE,FOLDER,PATH,SUFFIX) VALUES ('${file.originalname}','${file.filename}','${file.size}','${file.destination}','${time + '/' + file.filename}','${suffix}')`
 	/* 存数据库 */
 	execsql(sql).then(res => {
 		// 接收文件成功后返回数据给前端

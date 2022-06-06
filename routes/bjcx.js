@@ -119,7 +119,7 @@ router.get('/file/list', function (req, response, next) {
 	}
 	execsql(sql).then((r1) => {
 		let total = r1[0].total  //获取到的分页总数
-		const sqlNew = `select * from FILE where DELETE_TIME is null AND OLD_NAME LIKE '%${NAME}%' LIMIT ${pageNum},10`
+		const sqlNew = `select * from FILE where DELETE_TIME is null AND OLD_NAME LIKE '%${NAME}%' ORDER BY CREATE_TIME DESC LIMIT ${pageNum},10`
 		console.log(sqlNew, 'sqlNew')
 		execsql(sqlNew).then((r2) => {
 			response.send(success(r2, total));
@@ -131,7 +131,37 @@ router.get('/file/list', function (req, response, next) {
 	})
 });
 
+/* 修改附件 */
+router.post('/file/update', function (req, response, next) {
+	console.log(req.body, 'req.body')
+	const { ID, OLD_NAME } = req.body
+	let sql = `UPDATE FILE SET OLD_NAME = '${OLD_NAME}' WHERE ID = ${ID}`
+	execsql(sql).then(res => {
+		response.send(success(res))
+	}).catch((err) => {
+		response.send(err)
+	})
+});
 
+/* 附件假删除 */
+router.post('/file/del', function (req, response, next) {
+	const { ID } = req.body
+	let sql = `UPDATE FILE SET DElETE_TIME = now() WHERE ID = ${ID}`
+	execsql(sql).then(res => {
+		response.send(success(res))
+	}).catch((err) => {
+		response.send(err)
+	})
+});
+
+
+router.get('*', function (req, res) {
+	console.log('404 handler..')
+	res.send({
+		msg: '接口未定义',
+		code: 404
+	});
+});
 
 
 module.exports = router;

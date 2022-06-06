@@ -7,6 +7,14 @@ function createCode () {
 	// 	return v.toString(16)
 	// })
 }
+//code  生成附件名称
+function createFileName (length) {
+	var str = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+	var result = ''
+	for (var i = length; i > 0; --i)
+		result += str[Math.floor(Math.random() * str.length)]
+	return result
+}
 
 //成功返回参数
 function success (res, total = null) {
@@ -37,5 +45,6 @@ function fail (msg) {
 module.exports = {
 	createCode,
 	success,
-	fail
+	fail,
+	createFileName
 }
