@@ -36,61 +36,85 @@ router.post('/send/code', function (req, response, next) {
 /* 发送邮件 */
 router.post('/send/email', function (req, response, next) {
 	console.log(req.body, 'req.body')
-	const ip = req.ipInfo.ip.replace('::ffff:','')
-	console.log(req.ipInfo)
+// 	const ip = req.ipInfo.ip.replace('::ffff:','')
+// 	console.log(req.ipInfo)
 	const { email, subject, content } = req.body
 	sendEmail(email, subject, content)  /* 发送邮件 */
-	request({
-		url: 'https://api.map.baidu.com/location/ip?ak=Z2mZbxYsOQllRq7MqFspSrYNqG9uPa20&ip=' + ip,
-		method: "GET",
-	}, function (error, res, body) {
-		if (!error && res.statusCode == 200) {
-			console.log(body,'百度地图置换ip',JSON.parse(body)) // 请求成功的处理逻辑
-			let address = JSON.parse(body).address
-			let sql = `INSERT INTO LOG (IP,ADDRESS,ACTION) VALUES ('${ip}','${address}','${'发送了邮件，内容为：' + content}')`
-			execsql(sql).then(r => {
-				response.send(success(r))
-			}).catch((err) => {
-				response.send(err)
-			})
-		} else {
-			response.send(fail(error))
-		}
+// 	let address = JSON.parse(body).address
+	let sql = `INSERT INTO LOG (IP,ADDRESS,ACTION) VALUES ('本机地址','${email}','${'发送了邮件，内容为：' + content}')`
+	execsql(sql).then(r => {
+		response.send(success(r))
+	}).catch((err) => {
+		response.send(err)
 	})
+			
+// 	request({
+// 		url: 'https://api.map.baidu.com/location/ip?ak=Z2mZbxYsOQllRq7MqFspSrYNqG9uPa20&ip=' + ip,
+// 		method: "GET",
+// 	}, function (error, res, body) {
+// 		if (!error && res.statusCode == 200) {
+// 			console.log(body,'百度地图置换ip',JSON.parse(body)) // 请求成功的处理逻辑
+// 			let address = JSON.parse(body).address
+// 			let sql = `INSERT INTO LOG (IP,ADDRESS,ACTION) VALUES ('${ip}','${address}','${'发送了邮件，内容为：' + content}')`
+// 			execsql(sql).then(r => {
+// 				response.send(success(r))
+// 			}).catch((err) => {
+// 				response.send(err)
+// 			})
+// 		} else {
+// 			response.send(fail(error))
+// 		}
+// 	})
 
 });
 
 //登录
-router.post('/code/login', function (req, response, next) {
-	/* 这里 用户名就是 邮件 密码就是code */
+router.post('/code/login', async (req, response, next) => {
+	/* 这里 用户名就是 邮件 临时密码就是code */
 	const { username, password } = req.body
-	client.get(username).then(res => {   //从redis查询数据
-		if (password == res) {
-			console.log('验证成功')
-			//do something
-			// ...
-			let sql = `SELECT * FROM  USER WHERE EMAIL = '${username}'`
-			execsql(sql).then(res => {
-				console.log(res, 'res')
-				if (username == '2507128400@qq.com' && res[0]) {
-					response.send(success({
-						name: username,
-						code: password,
-						...res[0],
-						token: '2507128400@qq.com'
-					}))
-				} else {
-					response.send(fail('非管理员账号，请等待后续开发~'))
-				}
-			}).catch((err) => {
+	const redisRes = await client.get(username)
+	if (password == redisRes) {
+		console.log('验证成功')
 
-			})
+		//do something
+		let sql = `SELECT * FROM  USER WHERE EMAIL = '${username}'`
+		const res = await execsql(sql)
+		console.log(res, 'res')
+		/* 直接登录成功 */
+		if (res[0]) {
+			response.send(success({
+				name: username,
+				code: password,
+				...res[0],
+				token: username
+			}))
 		} else {
-			console.log('验证失败')
-			response.send(fail('验证失败'))
+			try {
+				// response.send(fail('非管理员账号，请等待后续开发~'))
+				/* 先创建用户 */
+				let sql = `INSERT INTO USER (NICK_NAME,EMAIL,AVATAR_URL) VALUES ('user_${createCode()}','${username}','https://thirdwx.qlogo.cn/mmopen/vi_32/xCIc7U9YzawpxOjH89Prg1LyQtgicbA8WVPOgMgibU35icXjDrdlzQvq5VicQy3TzxgNh0GdtVibhFCibibZ65E1uOMdw/132')`
+				const res = await execsql(sql)
+				/* 拿到创建用户的id */
+				let selectInsertSql = `SELECT * FROM USER WHERE EMAIL = '${username}'`
+				const resLogin = await execsql(selectInsertSql)
+				/* 创建角色 */
+				let insertRoleSql = `INSERT INTO USER_ROLE (USER_ID,ROLE_ID) VALUES ('${resLogin[0].ID}','2')`
+				let insertRoleRes = await execsql(insertRoleSql)
+				/* 创建角色 */
+				response.send(success({
+					name: username,
+					code: password,
+					...resLogin[0],
+					token: username
+				}))
+			} catch (error) {
+				response.send(fail(error))
+			}
 		}
-	})
-
+	} else {
+		console.log('验证失败')
+		response.send(fail('验证失败'))
+	}
 });
 
 
@@ -98,7 +122,7 @@ router.post('/code/login', function (req, response, next) {
 router.get('/get/user/info', function (req, response, next) {
 	const { ID } = req.query
 	/* 获取角色 */
-	let sql = `SELECT * FROM ROLE JOIN USER_ROLE ON ROLE.ID = USER_ROLE.ROLE_ID WHERE USER_ROLE.USER_ID = ${ID}`
+	let sql = `SELECT * FROM ROLE JOIN USER_ROLE ON ROLE.ID = USER_ROLE.ROLE_ID WHERE USER_ROLE.USER_ID = '${ID}' AND USER_ROLE.DELETE_TIME IS NULL`
 	execsql(sql).then(res => {
 		let sqlUser = `SELECT * FROM USER WHERE ID = ${ID}`
 		execsql(sqlUser).then(r => {
@@ -230,6 +254,17 @@ router.get('/getToken', function (req, res, next) {
 		res.send({ expires_time: tokenInfo.expires_time, code: 200 })
 	}
 });
+
+
+
+// 会影响其他的模块
+// router.get('*', function (req, res){
+//     console.log('404 handler..')
+//     res.send({
+//         msg:'接口未定义',
+//         code:404
+//     });
+// });
 
 
 
