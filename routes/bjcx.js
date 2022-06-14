@@ -39,15 +39,25 @@ router.get('/user/list', function (req, response, next) {
 	})
 });
 /* 获取详细信息 */
-router.get('/user/detail', function (req, response, next) {
-	console.log(req.body, 'req.body')
-	const { ID } = req.query
-	let sql = `SELECT * FROM USER  WHERE ID = ${ID}`
-	execsql(sql).then(res => {
-		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+router.get('/user/detail', async (req, response, next) => {
+	try {
+		console.log(req.body, 'req.body')
+		const { ID } = req.query
+		const sql = `SELECT * FROM USER  WHERE ID = ${ID}`
+		const res = await execsql(sql)
+		const roleSql = `SELECT ROLE_ID FROM USER_ROLE WHERE USER_ID = ${ID}`
+		const roleRes = await execsql(roleSql)
+		const newArr = []
+		roleRes.forEach(v => {
+			newArr.push(v.ROLE_ID)
+		});
+		response.send(success({
+			...res[0],
+			role:newArr
+		}))
+	} catch (error) {
+		response.send(error)
+	}
 });
 
 
@@ -65,7 +75,7 @@ router.post('/user/insert', function (req, response, next) {
 
 
 /* 修改用户 */
-router.post('/user/update', async (req, response, next)=> {
+router.post('/user/update', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { ID, NICK_NAME, ROLE, EMAIL } = req.body
 	const sql = `UPDATE USER SET NICK_NAME = '${NICK_NAME}',EMAIL = '${EMAIL}' WHERE ID = ${ID}`
@@ -77,8 +87,8 @@ router.post('/user/update', async (req, response, next)=> {
 			const res = await execsql(sql)
 			ROLE.forEach(v => {
 				const insertNewRoleSql = `INSERT INTO USER_ROLE (USER_ID,ROLE_ID) VALUES ('${ID}','${v}')`
-				execsql(insertNewRoleSql).then(res=>{
-				    console.log(res)
+				execsql(insertNewRoleSql).then(res => {
+					console.log(res)
 				})
 			});
 			response.send(success(result))
