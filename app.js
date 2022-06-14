@@ -36,7 +36,7 @@ app.use(cookieParser());
 // 开放public
 app.use(express.static(path.join(__dirname, 'public')));
 // 开放upload
-app.use('/upload',express.static(path.join(__dirname, '/upload')));
+app.use('/upload', express.static(path.join(__dirname, '/upload')));
 
 
 /* 这玩意不能放在开放静态资源之前 */
@@ -58,10 +58,12 @@ app.use('/api/upload', uploadRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-	next(createError(404));
+	// next(createError(404));
+	res.send({
+		msg: '接口未定义',
+		code: 404
+	})
 });
-
-
 
 
 // apidoc  api文档

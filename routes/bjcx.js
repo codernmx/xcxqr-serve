@@ -53,7 +53,7 @@ router.get('/user/detail', async (req, response, next) => {
 		});
 		response.send(success({
 			...res[0],
-			role:newArr
+			role: newArr
 		}))
 	} catch (error) {
 		response.send(error)
@@ -276,13 +276,34 @@ router.post('/file/del', function (req, response, next) {
 });
 
 
-router.get('*', function (req, res) {
-	console.log('404 handler..')
-	res.send({
-		msg: '接口未定义',
-		code: 404
-	});
+/* 通过关联表查询用户的角色一起返回 */
+router.get('/test', async (req, response, next) => {
+	const sql = 'SELECT * FROM USER LIMIT 0,10'
+	const result = await execsql(sql)
+	Promise.all(result.map(function (elem) {
+		return new Promise(async (resolve, reject) => {
+			/* 关联查询 */
+			/* 关联查询 */
+			const sql = `SELECT * FROM ROLE JOIN USER_ROLE ON USER_ROLE.ROLE_ID = ROLE.ID WHERE USER_ROLE.USER_ID = '${elem.ID}'`
+			const res = await execsql(sql)
+			elem.USER = [...res]
+			resolve(res);
+		})
+	})).then((data) => {
+		//在这就可以等所有的返回结果可以得到
+		response.send(success(result))
+	})
 });
+
+
+
+// router.get('*', function (req, res) {
+// 	console.log('404 handler..')
+// 	res.send({
+// 		msg: '接口未定义',
+// 		code: 404
+// 	});
+// });
 
 
 module.exports = router;
