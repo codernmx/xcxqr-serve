@@ -45,7 +45,7 @@ router.get('/user/detail', async (req, response, next) => {
 		const { ID } = req.query
 		const sql = `SELECT * FROM USER  WHERE ID = ${ID}`
 		const res = await execsql(sql)
-		const roleSql = `SELECT ROLE_ID FROM USER_ROLE WHERE USER_ID = ${ID}`
+		const roleSql = `SELECT ROLE_ID FROM USER_ROLE WHERE USER_ID = ${ID} AND DELETE_TIME IS NULL`
 		const roleRes = await execsql(roleSql)
 		const newArr = []
 		roleRes.forEach(v => {
@@ -83,7 +83,8 @@ router.post('/user/update', async (req, response, next) => {
 		const result = await execsql(sql)
 		if (ROLE.length > 0) {
 			/* 清空角色 设置新的角色 */
-			const sql = `UPDATE USER_ROLE SET DElETE_TIME = now() WHERE USER_ID = ${ID}`
+			const sql = `DELETE FROM USER_ROLE WHERE USER_ID = ${ID}`
+			// const sql = `UPDATE USER_ROLE SET DElETE_TIME = now() WHERE USER_ID = ${ID}`
 			const res = await execsql(sql)
 			ROLE.forEach(v => {
 				const insertNewRoleSql = `INSERT INTO USER_ROLE (USER_ID,ROLE_ID) VALUES ('${ID}','${v}')`
