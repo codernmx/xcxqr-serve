@@ -5,9 +5,6 @@ var connection = mysql.createConnection(dbConfig);
 //连接数据库
 connection.connect();
 
-
-
-
 //避免数据库超时断开
 function keepAlive () {
 	connection.query('select 1', [], function (err, result) {
@@ -16,9 +13,6 @@ function keepAlive () {
 	});
 }
 setInterval(keepAlive, 1000 * 60);
-
-
-
 
 //执行语句sql
 function execsql (sql) {
@@ -33,8 +27,6 @@ function execsql (sql) {
 	})
 	return promise
 }
-
-
 
 module.exports = {
 	execsql,

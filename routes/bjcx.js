@@ -1,9 +1,7 @@
 var express = require('express');
 var router = express.Router();
-
-
 const { execsql } = require('../utils/coon');//数据库sql函数
-const { createCode, success, fail } = require('../utils/index');//成功失败
+const { success, fail } = require('../utils/index');//成功失败
 
 
 /**
@@ -38,6 +36,8 @@ router.get('/user/list', function (req, response, next) {
 		response.send(err)
 	})
 });
+
+
 /* 获取详细信息 */
 router.get('/user/detail', async (req, response, next) => {
 	try {
@@ -62,15 +62,16 @@ router.get('/user/detail', async (req, response, next) => {
 
 
 /* 新增用户 */
-router.post('/user/insert', function (req, response, next) {
+router.post('/user/insert', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { NICK_NAME } = req.body
 	const sql = `INSERT INTO USER (NICK_NAME) VALUES ('${NICK_NAME}')`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
 
 
@@ -97,23 +98,37 @@ router.post('/user/update', async (req, response, next) => {
 			response.send(success(result))
 		}
 	} catch (error) {
-		response.send(error)
+		response.send(fail(error))
+	}
+});
+
+
+/* 修改用户状态 */
+router.post('/user/updateStatus', async (req, response, next) => {
+	console.log(req.body, 'req.body')
+	const { ID, STATUS } = req.body
+	const sql = `UPDATE USER SET STATUS = '${STATUS}' WHERE ID = ${ID}`
+	try {
+		const res = await execsql(sql)
+		response.send(success(res))
+	} catch (error) {
+		response.send(fail(error))
 	}
 });
 
 
 /* 删除用户（软删除） */
-router.get('/user/delete', function (req, response, next) {
+router.get('/user/delete', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { ID } = req.query
 	let sql = `UPDATE USER SET DElETE_TIME = now() WHERE ID = ${ID}`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
-
 
 
 
@@ -146,54 +161,58 @@ router.get('/role/list', function (req, response, next) {
 	})
 });
 /* 获取角色详细信息 */
-router.get('/role/detail', function (req, response, next) {
+router.get('/role/detail', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { ID } = req.query
 	let sql = `SELECT * FROM ROLE  WHERE ID = ${ID}`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
 
 
 /* 新增角色 */
-router.post('/role/insert', function (req, response, next) {
+router.post('/role/insert', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { NAME, REMARKS } = req.body
 	const sql = `INSERT INTO ROLE (NAME,REMARKS) VALUES ('${NAME}','${REMARKS}')`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
 
 
 /* 修改角色 */
-router.post('/role/update', function (req, response, next) {
+router.post('/role/update', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { ID, NAME, REMARKS } = req.body
 	let sql = `UPDATE ROLE SET NAME = '${NAME}', REMARKS = '${REMARKS}' WHERE ID = ${ID}`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
 
 
 /* 删除角色（软删除） */
-router.get('/role/delete', function (req, response, next) {
+router.get('/role/delete', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { ID } = req.query
 	let sql = `UPDATE ROLE SET DElETE_TIME = now() WHERE ID = ${ID}`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
 
 
@@ -201,9 +220,6 @@ router.get('/role/delete', function (req, response, next) {
 /* ----------------------------------日志------------------------------- */
 /* ----------------------------------日志------------------------------- */
 
-
-
-/* 日志表 */
 
 // 获取用户行为列表（ip表）（分页）
 router.get('/log/list', function (req, response, next) {
@@ -254,26 +270,28 @@ router.get('/file/list', function (req, response, next) {
 });
 
 /* 修改附件 */
-router.post('/file/update', function (req, response, next) {
+router.post('/file/update', async (req, response, next) => {
 	console.log(req.body, 'req.body')
 	const { ID, OLD_NAME } = req.body
 	let sql = `UPDATE FILE SET OLD_NAME = '${OLD_NAME}' WHERE ID = ${ID}`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
 
 /* 附件假删除 */
-router.post('/file/del', function (req, response, next) {
+router.post('/file/del', async (req, response, next) => {
 	const { ID } = req.body
 	let sql = `UPDATE FILE SET DElETE_TIME = now() WHERE ID = ${ID}`
-	execsql(sql).then(res => {
+	try {
+		const res = await execsql(sql)
 		response.send(success(res))
-	}).catch((err) => {
-		response.send(err)
-	})
+	} catch (error) {
+		response.send(fail(error))
+	}
 });
 
 
@@ -283,7 +301,6 @@ router.get('/test', async (req, response, next) => {
 	const result = await execsql(sql)
 	Promise.all(result.map(function (elem) {
 		return new Promise(async (resolve, reject) => {
-			/* 关联查询 */
 			/* 关联查询 */
 			const sql = `SELECT * FROM ROLE JOIN USER_ROLE ON USER_ROLE.ROLE_ID = ROLE.ID WHERE USER_ROLE.USER_ID = '${elem.ID}'`
 			const res = await execsql(sql)
@@ -295,16 +312,6 @@ router.get('/test', async (req, response, next) => {
 		response.send(success(result))
 	})
 });
-
-
-
-// router.get('*', function (req, res) {
-// 	console.log('404 handler..')
-// 	res.send({
-// 		msg: '接口未定义',
-// 		code: 404
-// 	});
-// });
 
 
 module.exports = router;

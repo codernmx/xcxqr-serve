@@ -1,13 +1,11 @@
 
 var express = require('express');
 var router = express.Router();
-
 var fs = require('fs'); //文件
 var multer = require('multer');   //上传文件中间件
 var moment = require('silly-datetime'); //格式化时间
-
 const { execsql } = require('../utils/coon');//数据库sql函数
-const { createCode, success, fail, createFileName } = require('../utils/index');//成功失败
+const { success, createFileName } = require('../utils/index');//成功失败
 
 
 // 创建文件夹  使用此代码就是为了让我们查找磁盘中是否有该文件夹，如果没有，可以自动创建，而不是我们提前手动创建好。如果不使用此代码，则我们再使用该文件夹之前，需要手动创建好当前文件夹

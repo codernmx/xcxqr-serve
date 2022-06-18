@@ -3,20 +3,13 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
 var bodyParser = require('body-parser')//导入post请求的中间件
 var expressip = require('express-ip'); //查看IP
-
-
-var indexRouter = require('./routes/index');
-var bjcxRouter = require('./routes/bjcx');
+var indexRouter = require('./routes/index'); //小程序二维码登录
+var bjcxRouter = require('./routes/bjcx'); //NJCX 数据库相关
 var uploadRouter = require('./routes/upload'); //上传附件
-
-
+var gzhRouter = require('./routes/gzh'); //公众号部分
 var app = express();
-
-
-
 
 app.use(expressip().getIpInfoMiddleware);
 // view engine setup
@@ -26,7 +19,6 @@ app.set('view engine', 'jade');
 // post中间件
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-
 
 
 app.use(logger('dev'));
@@ -51,14 +43,15 @@ app.all('*', function (req, res, next) {
 });
 
 
-
+/* 使用导入的router */
 app.use('/api/', indexRouter);
+app.use('/api/gzh', gzhRouter);
 app.use('/api/bjcx', bjcxRouter);
 app.use('/api/upload', uploadRouter);
 
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-	// next(createError(404));
 	res.send({
 		msg: '接口未定义',
 		code: 404
@@ -67,16 +60,19 @@ app.use(function (req, res, next) {
 
 
 // apidoc  api文档
-// app.use('./apidoc',express.static('./apidoc'));
-// error handler
-app.use(function (err, req, res, next) {
-	// set locals, only providing error in development
-	res.locals.message = err.message;
-	res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use('./apidoc', express.static('./apidoc'));
 
-	// render the error page
-	res.status(err.status || 500);
-	res.render('error');
-});
+
+// error handler
+/* 初步判定不抛出异常是这里的问题先屏蔽掉 */
+// app.use(function (err, req, res, next) {
+// 	// set locals, only providing error in development
+// 	res.locals.message = err.message;
+// 	res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+// 	// render the error page
+// 	res.status(err.status || 500);
+// 	res.render('error');
+// });
 
 module.exports = app;

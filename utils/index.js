@@ -7,7 +7,7 @@ function createCode () {
 	// 	return v.toString(16)
 	// })
 }
-//code  生成附件名称
+//code  生成附件名称（随机字符串）
 function createFileName (length) {
 	var str = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 	var result = ''
