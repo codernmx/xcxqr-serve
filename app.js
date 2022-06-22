@@ -20,6 +20,7 @@ app.set('view engine', 'jade');
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
+const loggerProxy = require('./config/logConfig');//redis使用
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -52,6 +53,7 @@ app.use('/api/upload', uploadRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
+	loggerProxy.info(req.path)
 	res.send({
 		msg: '接口未定义',
 		code: 404

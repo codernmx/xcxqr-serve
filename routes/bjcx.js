@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const { execsql } = require('../utils/coon');//数据库sql函数
 const { success, fail } = require('../utils/index');//成功失败
+const loggerProxy = require('../config/logConfig');//导入日志log4
 
 
 /**
@@ -41,7 +42,7 @@ router.get('/user/list', function (req, response, next) {
 /* 获取详细信息 */
 router.get('/user/detail', async (req, response, next) => {
 	try {
-		console.log(req.body, 'req.body')
+		loggerProxy.info(req.body, '请求参数')
 		const { ID } = req.query
 		const sql = `SELECT * FROM USER  WHERE ID = ${ID}`
 		const res = await execsql(sql)
@@ -63,7 +64,7 @@ router.get('/user/detail', async (req, response, next) => {
 
 /* 新增用户 */
 router.post('/user/insert', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { NICK_NAME } = req.body
 	const sql = `INSERT INTO USER (NICK_NAME) VALUES ('${NICK_NAME}')`
 	try {
@@ -77,7 +78,7 @@ router.post('/user/insert', async (req, response, next) => {
 
 /* 修改用户 */
 router.post('/user/update', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { ID, NICK_NAME, ROLE, EMAIL } = req.body
 	const sql = `UPDATE USER SET NICK_NAME = '${NICK_NAME}',EMAIL = '${EMAIL}' WHERE ID = ${ID}`
 	try {
@@ -90,7 +91,7 @@ router.post('/user/update', async (req, response, next) => {
 			ROLE.forEach(v => {
 				const insertNewRoleSql = `INSERT INTO USER_ROLE (USER_ID,ROLE_ID) VALUES ('${ID}','${v}')`
 				execsql(insertNewRoleSql).then(res => {
-					console.log(res)
+					loggerProxy.info(res)
 				})
 			});
 			response.send(success(result))
@@ -105,7 +106,7 @@ router.post('/user/update', async (req, response, next) => {
 
 /* 修改用户状态 */
 router.post('/user/updateStatus', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { ID, STATUS } = req.body
 	const sql = `UPDATE USER SET STATUS = '${STATUS}' WHERE ID = ${ID}`
 	try {
@@ -119,7 +120,7 @@ router.post('/user/updateStatus', async (req, response, next) => {
 
 /* 删除用户（软删除） */
 router.get('/user/delete', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { ID } = req.query
 	let sql = `UPDATE USER SET DElETE_TIME = now() WHERE ID = ${ID}`
 	try {
@@ -162,7 +163,7 @@ router.get('/role/list', function (req, response, next) {
 });
 /* 获取角色详细信息 */
 router.get('/role/detail', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { ID } = req.query
 	let sql = `SELECT * FROM ROLE  WHERE ID = ${ID}`
 	try {
@@ -176,7 +177,7 @@ router.get('/role/detail', async (req, response, next) => {
 
 /* 新增角色 */
 router.post('/role/insert', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { NAME, REMARKS } = req.body
 	const sql = `INSERT INTO ROLE (NAME,REMARKS) VALUES ('${NAME}','${REMARKS}')`
 	try {
@@ -190,7 +191,7 @@ router.post('/role/insert', async (req, response, next) => {
 
 /* 修改角色 */
 router.post('/role/update', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { ID, NAME, REMARKS } = req.body
 	let sql = `UPDATE ROLE SET NAME = '${NAME}', REMARKS = '${REMARKS}' WHERE ID = ${ID}`
 	try {
@@ -204,7 +205,7 @@ router.post('/role/update', async (req, response, next) => {
 
 /* 删除角色（软删除） */
 router.get('/role/delete', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { ID } = req.query
 	let sql = `UPDATE ROLE SET DElETE_TIME = now() WHERE ID = ${ID}`
 	try {
@@ -258,7 +259,7 @@ router.get('/file/list', function (req, response, next) {
 	execsql(sql).then((r1) => {
 		let total = r1[0].total  //获取到的分页总数
 		const sqlNew = `select * from FILE where DELETE_TIME is null AND OLD_NAME LIKE '%${NAME}%' ORDER BY CREATE_TIME DESC LIMIT ${pageNum},10`
-		console.log(sqlNew, 'sqlNew')
+		loggerProxy.info(sqlNew, 'sqlNew')
 		execsql(sqlNew).then((r2) => {
 			response.send(success(r2, total));
 		}).catch((err) => {
@@ -271,7 +272,7 @@ router.get('/file/list', function (req, response, next) {
 
 /* 修改附件 */
 router.post('/file/update', async (req, response, next) => {
-	console.log(req.body, 'req.body')
+	loggerProxy.info(req.body, '请求参数')
 	const { ID, OLD_NAME } = req.body
 	let sql = `UPDATE FILE SET OLD_NAME = '${OLD_NAME}' WHERE ID = ${ID}`
 	try {

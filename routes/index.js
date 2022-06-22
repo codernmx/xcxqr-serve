@@ -11,9 +11,13 @@ const { sendCode, sendEmail } = require('../utils/nodemailer');//发送邮件
 const { execsql } = require('../utils/coon');//数据库操作方法
 const { createCode, success, fail } = require('../utils/index');//成功失败
 
+const loggerProxy = require('../config/logConfig');//导入日志log4
+var moment = require('silly-datetime'); //格式化时间
 
+// var logger = log4js.getLogger()
 /* /api */
 router.get('/', async (req, res, next) => {
+	loggerProxy.info('Hello 大冤种，接口调用成功了~~~')
 	res.send(success('Hello 大冤种，接口调用成功了~~~'))
 });
 
@@ -23,25 +27,24 @@ const tokenFileName = 'mp_token_info.json'
 
 /* 共用获取token */
 async function getToken () {
-	/* 检测文件中token是否过期 */
-	console.log('重新获取access_token')
 	/* 获取 */
 	const getTokenUrl = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=' + appConfig.appId + '&secret=' + appConfig.appSecret
 	const tokenRes = await requests(getTokenUrl, 'GET')
 	const access_token = JSON.parse(tokenRes).access_token
 	/* 存储 */
-	const expires_time = parseInt(Date.now() / 1000)
+	const time = moment.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
+	loggerProxy.info('定时重新获取access_token---------------->>',time)
 	const tokenInfo = {
 		access_token,
-		expires_time,
+		create_time: time,
 		remark: '这是用于生成小程序二维码的access_token'
 	}
 	fs.writeFileSync(tokenFileName, JSON.stringify(tokenInfo))
 	return 0
 }
-
+getToken()
 /* 保证文件中token  一直有效 */
-setInterval(getToken, 1000 * 7100);
+setInterval(getToken, 1000 * 3600);
 
 
 
@@ -59,9 +62,9 @@ router.post('/send/code', async (req, response, next) => {
 
 /* 发送邮件 */
 router.post('/send/email', async (req, response, next) => {
-	console.log(req.body, '请求参数')
+	loggerProxy.info(req.body, '请求参数')
 	// 	const ip = req.ipInfo.ip.replace('::ffff:','')
-	// 	console.log(req.ipInfo)
+	// 	loggerProxy.info(req.ipInfo)
 	const { email, subject, content } = req.body
 	sendEmail(email, subject, content)  /* 发送邮件 */
 	// 	let address = JSON.parse(body).address
@@ -77,7 +80,7 @@ router.post('/send/email', async (req, response, next) => {
 	// 		method: "GET",
 	// 	}, function (error, res, body) {
 	// 		if (!error && res.statusCode == 200) {
-	// 			console.log(body,'百度地图置换ip',JSON.parse(body)) // 请求成功的处理逻辑
+	// 			loggerProxy.info(body,'百度地图置换ip',JSON.parse(body)) // 请求成功的处理逻辑
 	// 			let address = JSON.parse(body).address
 	// 			let sql = `INSERT INTO LOG (IP,ADDRESS,ACTION) VALUES ('${ip}','${address}','${'发送了邮件，内容为：' + content}')`
 	// 			execsql(sql).then(r => {
@@ -98,10 +101,10 @@ router.post('/code/login', async (req, response, next) => {
 	const { username, password } = req.body
 	const redisRes = await client.get(username)
 	if (password == redisRes) {
-		console.log('验证成功')
+		loggerProxy.info('验证成功')
 		let sql = `SELECT * FROM  USER WHERE EMAIL = '${username}' AND DELETE_TIME IS NULL`
 		const res = await execsql(sql)
-		console.log(res, 'res')
+		loggerProxy.info(res, 'res')
 		/* 直接登录成功 */
 		if (res[0]) {
 			if (res[0].STATUS == 0) {
@@ -220,7 +223,7 @@ router.get('/uuid', async (req, res, next) => {
 // 获取小程序二维码
 router.get('/getCode', async (req, res, next) => {
 	const access_token = JSON.parse(fs.readFileSync(tokenFileName, 'utf-8')).access_token
-	console.log(access_token, '获取access_token')
+	loggerProxy.info(access_token, '获取access_token')
 	let useAuth = req.query.useAuth
 	// 获取随机uuid
 	let scene = 'uuid=' + (req.query.uuid || 9999) + '&auth=' + useAuth
@@ -239,7 +242,7 @@ router.get('/getCode', async (req, res, next) => {
 		encoding: null,
 	}, function (error, response, body) {
 		if (!error && response.statusCode == 200) {
-			console.log(body, '获取二维') // 请求成功的处理逻辑
+			loggerProxy.info(body, '获取二维') // 请求成功的处理逻辑
 			res.setHeader("Content-Type", 'image/png');
 			res.send(body)
 		} else {

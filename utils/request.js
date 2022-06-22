@@ -39,7 +39,7 @@ const requests =  (url, method = 'POST', data, isForm = false) => {
           headers: {
             "content-type": "application/json",
           },
-          body: data
+          body: JSON.stringify(data)
         }, function (error, response, body) {
           if (!error && response.statusCode == 200) {
             console.log(body) // 请求成功的处理逻辑
